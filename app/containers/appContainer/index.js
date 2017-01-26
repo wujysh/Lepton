@@ -7,6 +7,8 @@ import NavigationPanel from '../navigationPanel'
 import LoginPage from '../loginPage'
 import SnippetTable from '../snippetTable'
 import SearchPage from '../searchPage'
+import AlertCard from '../alertCard'
+
 import './index.scss'
 
 class AppContainer extends Component {
@@ -42,6 +44,9 @@ class AppContainer extends Component {
           <SnippetTable
             searchIndex = { searchIndex }
             reSyncUserGists = { reSyncUserGists } />
+          <div className='alertCard'>
+            <AlertCard/>
+          </div>
         </div>
       )
     }

@@ -1,0 +1,10 @@
+.alert-section {
+  .font-style-base {
+    font-family: Consolas, Menlo, Monaco, "Courier New", monospace;
+    font-size: 13px;
+  }
+
+  .alert-content {
+    @extend .font-style-base;
+  }
+}
