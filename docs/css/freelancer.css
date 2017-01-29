@@ -71,7 +71,6 @@ header {
   text-align: center;
   /*background: #f2efe8;*/
   background: #f2efe8;
-
   color: #2C3E50;
 }
 header .container {
@@ -504,4 +503,73 @@ fieldset[disabled] .btn-success.active {
 .portfolio-modal .modal-backdrop {
   opacity: 0;
   display: none;
+}
+
+
+/* Custom CSS */
+.screenshot-logo {
+  width: 1000px;
+}
+
+.platforms {
+  margin-top: 20px;
+}
+
+.img-logo {
+  width: 100px;
+}
+
+.feature-title {
+  font-size: 15px;
+  color: #233140;
+}
+
+header {
+  text-align: center;
+  background: rgb(230, 230, 230);
+}
+
+.app-description {
+  font-size: 30px;
+}
+
+.faq-section {
+  color: #2C3E50;
+  margin-bottom: 20px;
+}
+
+.faq-content {
+  color: #2C3E50;
+}
+
+.faq-item {
+  margin-bottom: 30px;
+}
+
+.faq-question {
+    font-weight: light;
+    font-size: 20px;
+}
+
+.faq-answer {
+    color: grey;
+    font-weight: light;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.faq-img {
+    /*margin-left: 80px;
+    margin-right: 80px;*/
+    margin-top: 10px;
+    border: solid 1px rgb(221, 221, 221);
+}
+
+.social-button {
+    background: #f2efe8;
+}
+
+.github-snippet {
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
