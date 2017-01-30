@@ -574,6 +574,21 @@ header {
   margin-bottom: 10px;
 }
 
+.faq-note {
+  text-align: center;
+  width: 100%;
+  padding: 0 50px;
+  color: rgb(160, 160, 160);
+}
+
+.faq-link {
+  color: #2C3E50;
+}
+
+.faq-link:hover {
+  color: #2C3E50;
+}
+
 /* DEMO-SPECIFIC STYLES */
 .typewriter {
   width: 350px;
