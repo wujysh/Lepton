@@ -547,29 +547,66 @@ header {
 }
 
 .faq-question {
-    font-weight: light;
-    font-size: 20px;
+  font-weight: light;
+  font-size: 20px;
 }
 
 .faq-answer {
-    color: grey;
-    font-weight: light;
-    margin-top: 10px;
-    margin-bottom: 10px;
+  color: grey;
+  font-weight: light;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .faq-img {
-    /*margin-left: 80px;
-    margin-right: 80px;*/
-    margin-top: 10px;
-    border: solid 1px rgb(221, 221, 221);
+  /*margin-left: 80px;
+  margin-right: 80px;*/
+  margin-top: 10px;
+  border: solid 1px rgb(221, 221, 221);
 }
 
 .social-button {
-    background: #f2efe8;
+  background: #f2efe8;
 }
 
 .github-snippet {
-    margin-top: 10px;
-    margin-bottom: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+/* DEMO-SPECIFIC STYLES */
+.typewriter {
+  width: 350px;
+  overflow: hidden; /* Ensures the content is not revealed until the animation */
+  border-right: .15em solid orange; /* The typwriter cursor */
+  white-space: nowrap; /* Keeps the content on a single line */
+  margin: 0 auto; /* Gives that scrolling effect as the typing happens */
+  letter-spacing: .1em; /* Adjust as needed */
+  animation:
+    typing 3.5s steps(40, end),
+    blink-caret .75s step-end infinite;
+}
+
+/* The typing effect */
+@keyframes typing {
+  from { width: 0 }
+  to { width: 350px; }
+}
+
+/* The typewriter cursor effect */
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: orange; }
+}
+
+@media (max-width: 767px) {
+
+  .typewriter {
+    width: 245px;
+  }
+
+  @keyframes typing {
+    from { width: 0 }
+    to { width: 245px; }
+  }
 }
