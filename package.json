@@ -63,6 +63,7 @@
     "human-readable-time": "^0.2.4",
     "image-downloader": "^2.0.1",
     "marked": "^0.3.6",
+    "proxy-agent": "^2.0.0",
     "react": "^15.4.1",
     "react-bootstrap": "^0.30.7",
     "react-codemirror": "^0.3.0",
