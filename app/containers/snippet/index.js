@@ -8,7 +8,7 @@ import GistEditorForm from '../gistEditorForm'
 import { UPDATE_GIST } from '../gistEditorForm'
 import HighlightJS from 'highlight.js'
 import Markdown from 'marked'
-import { shell, remote, clipboard } from 'electron'
+import { shell, remote, clipboard, ipcRenderer } from 'electron'
 import Notifier from '../../utilities/notifier'
 import HumanReadableTime from 'human-readable-time'
 import {
@@ -43,6 +43,16 @@ Markdown.setOptions({
 })
 
 class Snippet extends Component {
+
+  componentWillMount () {
+    ipcRenderer.on('edit-gist-renderer', () => {
+      this.showGistEditorModal()
+    })
+  }
+
+  componentWillUnmount () {
+    ipcRenderer.removeAllListeners('edit-gist-renderer')
+  }
 
   showDeleteModal () {
     this.props.updateGistDeleteModeStatus('ON')
@@ -95,8 +105,11 @@ class Snippet extends Component {
     )
   }
 
-  showGistEditorModal (details) {
-    details && this.props.updateGistEditModeStatus('ON')
+  showGistEditorModal () {
+    const { gists, activeGist, updateGistEditModeStatus } = this.props
+    if (gists && gists[activeGist] && gists[activeGist].details) {
+      updateGistEditModeStatus('ON')
+    }
   }
 
   closeGistEditorModal () {
@@ -104,6 +117,7 @@ class Snippet extends Component {
   }
 
   handleGistEditorFormSubmit (data) {
+    const { gists, activeGist, accessToken } = this.props
     const description = data.description.trim()
     const processedFiles = {}
 
@@ -113,7 +127,7 @@ class Snippet extends Component {
       }
     })
 
-    const activeSnippet = this.props.gists[this.props.activeGist]
+    const activeSnippet = gists[activeGist]
     for (const preFile in activeSnippet.details.files) {
       if (!processedFiles[preFile]) {
         processedFiles[preFile] = null
@@ -128,28 +142,28 @@ class Snippet extends Component {
     // response, which provides better user experience.
     this.closeGistEditorModal()
 
-    getGitHubApi(EDIT_SINGLE_GIST)(
-      this.props.accessToken,
-      this.props.activeGist,
-      description,
-      processedFiles)
-    .catch((err) => {
-      Notifier('Gist update failed')
-      logger.error(JSON.stringify(err))
-    })
-    .then((response) => {
-      this.updateGistsStoreWithUpdatedGist(response)
-    })
+    return getGitHubApi(EDIT_SINGLE_GIST)(
+        accessToken,
+        activeGist,
+        description,
+        processedFiles)
+      .catch((err) => {
+        Notifier('Gist update failed')
+        logger.error(JSON.stringify(err))
+      })
+      .then((response) => {
+        this.updateGistsStoreWithUpdatedGist(response)
+      })
   }
 
   updateGistsStoreWithUpdatedGist (gistDetails) {
-    const { gistTags, activeGistTag, updateSingleGist,
+    const { gists, activeGist, gistTags, activeGistTag, updateSingleGist,
       updateGistTags, selectGistTag, searchIndex} = this.props
 
     const gistId = gistDetails.id
     const files = gistDetails.files
 
-    const activeSnippet = this.props.gists[this.props.activeGist]
+    const activeSnippet = gists[activeGist]
     const preLangs = activeSnippet.langs
     const preCustomTags = parseCustomTags(descriptionParser(activeSnippet.brief.description).customTags)
 
@@ -330,26 +344,60 @@ class Snippet extends Component {
     this.refs.rawModalText.select()
   }
 
-  createMarkup (content, lang) {
+  //  Adapt the language name for Highlight.js. For example, 'C#' should be
+  //  expressed as 'cs' to be recognized by Highlight.js.
+  adaptedLanguage (lang) {
     let language = lang || 'Other'
 
-    language = language === 'Shell' ? 'Bash' : language
-    language = language.startsWith('Objective-C') ? 'objectivec' : language
-    language = language === 'C#' ? 'cs' : language
-
-    let htmlContent = ''
-
-    if (language === 'Markdown') {
-      htmlContent = `<div class='markdown-section'>${Markdown(content)}</div>`
-    } else {
-      let line = 0
-      let html = `<span class='line-number' data-pseudo-content=${++line}></span>` +
-          HighlightJS.highlightAuto(content, [language, 'css']).value
-      let htmlWithLineNumbers = html.replace(/\r?\n/g, () => {
-        return `\n<span class='line-number' data-pseudo-content=${++line}></span>`
-      })
-      htmlContent = `<pre><code>${htmlWithLineNumbers}</code></pre>`
+    switch (language) {
+      case 'Shell': return 'Bash'
+      case 'C#': return 'cs'
+      case 'Objective-C': return 'objectivec'
+      case 'Objective-C++': return 'objectivec'
+      default:
     }
+    return language
+  }
+
+  createMarkdownCodeBlock (content) {
+    return `<div class='markdown-section'>${Markdown(content)}</div>`
+  }
+
+  createHighlightedCodeBlock (content, language) {
+    let lineNumber = 0
+    const highlightedContent = HighlightJS.highlightAuto(content, [language]).value
+
+    /*
+      Highlight.js wraps comment blocks inside <span class="hljs-comment"></span>.
+      However, when the multi-line comment block is broken down into diffirent
+      table rows, only the first row, which is appended by the <span> tag, is
+      highlighted. The following code fixes it by appending <span> to each line
+      of the comment block.
+    */
+    const commentPattern = /<span class="hljs-comment">(.|\n)*?<\/span>/g
+    const adaptedHighlightedContent = highlightedContent.replace(commentPattern, data => {
+      return data.replace(/\r?\n/g, () => {
+         // Chromium is smart enough to add the closing </span>
+        return '\n<span class="hljs-comment">'
+      })
+    })
+
+    const contentTable = adaptedHighlightedContent.split(/\r?\n/).map(lineContent => {
+      return `<tr>
+                <td class='line-number' data-pseudo-content=${++lineNumber}></td>
+                <td>${lineContent}</td>
+              </tr>`
+    }).join('')
+
+    return `<pre><code><table class='code-table'>${contentTable}</table></code></pre>`
+  }
+
+  createMarkup (content, lang) {
+    const language = this.adaptedLanguage(lang)
+    const htmlContent = language === 'Markdown'
+        ? this.createMarkdownCodeBlock(content)
+        : this.createHighlightedCodeBlock(content, language)
+
     return { __html: htmlContent }
   }
 
@@ -367,7 +415,7 @@ class Snippet extends Component {
         </div>
         <a className='customized-button'
           href='#'
-          onClick={ this.showGistEditorModal.bind(this, activeSnippet.details) }>
+          onClick={ this.showGistEditorModal.bind(this) }>
           #edit
         </a>
         <a className='customized-button'
@@ -414,7 +462,8 @@ class Snippet extends Component {
   }
 
   render () {
-    const activeSnippet = this.props.gists[this.props.activeGist]
+    const { gists, activeGist } = this.props
+    const activeSnippet = gists[activeGist]
     if (!activeSnippet) return null
 
     const fileHtmlArray = []
