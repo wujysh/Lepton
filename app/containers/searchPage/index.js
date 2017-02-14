@@ -2,7 +2,7 @@
 
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { Modal, ListGroupItem, ListGroup } from 'react-bootstrap'
+import { Modal } from 'react-bootstrap'
 import {
   selectGistTag,
   selectGist,
@@ -13,7 +13,7 @@ import { descriptionParser, addLangPrefix as Prefixed } from '../../utilities/pa
 
 import './index.scss'
 
-import { remote, ipcRenderer } from 'electron'
+import { remote } from 'electron'
 const logger = remote.getGlobal('logger')
 
 class SearchPage extends Component {
@@ -28,20 +28,8 @@ class SearchPage extends Component {
   }
 
   componentWillMount () {
-    const { updateSearchWindowStatus, searchIndex } = this.props
-    ipcRenderer.on('key-up', this.selectPreGist.bind(this))
-    ipcRenderer.on('key-down', this.selectNextGist.bind(this))
-    ipcRenderer.on('key-enter', this.selectCurrentGist.bind(this))
-    ipcRenderer.on('exit-search', () => {
-      updateSearchWindowStatus('OFF')
-    })
+    const { searchIndex } = this.props
     searchIndex.initFuseSearch()
-  }
-
-  componentWillUnmount () {
-    ipcRenderer.removeAllListeners('key-up')
-    ipcRenderer.removeAllListeners('key-down')
-    ipcRenderer.removeAllListeners('key-enter')
   }
 
   selectPreGist () {
@@ -53,6 +41,7 @@ class SearchPage extends Component {
     this.setState({
       selectedIndex: newSelectedIndex,
     })
+    this.refs[newSelectedIndex].scrollIntoView(false)
   }
 
   selectNextGist () {
@@ -64,12 +53,30 @@ class SearchPage extends Component {
     this.setState({
       selectedIndex: newSelectedIndex,
     })
+    this.refs[newSelectedIndex].scrollIntoView(false)
   }
 
   selectCurrentGist () {
     const { selectedIndex, searchResults } = this.state
     if (searchResults && searchResults.length > 0) {
       this.handleSnippetClicked(searchResults[selectedIndex].id)
+    }
+  }
+
+  handleKeyDown (e) {
+    const { updateSearchWindowStatus } = this.props
+    if (e.keyCode === 40) {  // Down
+      e.preventDefault()
+      this.selectNextGist()
+    } else if (e.keyCode === 38) { // Up
+      e.preventDefault()
+      this.selectPreGist()
+    } else if (e.keyCode === 13) { // Enter
+      e.preventDefault()
+      this.selectCurrentGist()
+    } else if (e.keyCode === 27) { // Esc
+      e.preventDefault()
+      updateSearchWindowStatus('OFF')
     }
   }
 
@@ -147,14 +154,15 @@ class SearchPage extends Component {
         )
       })
       resultsJSXGroup.push(
-        <ListGroupItem
+        <li
           className={ index === selectedIndex
               ? 'search-result-item-selected' : 'search-result-item' }
           key={ gist.id }
+          ref={ index }
           onClick={ this.handleSnippetClicked.bind(this, gist.id) }>
           <div className='snippet-description'>{ this.renderSnippetDescription(highlightedDescription) }</div>
           <div className='gist-tag-group'>{ langs }</div>
-        </ListGroupItem>
+        </li>
       )
     })
     return resultsJSXGroup
@@ -170,11 +178,11 @@ class SearchPage extends Component {
           autoFocus
           value={ this.state.inputValue }
           onChange={ this.updateInputValue.bind(this) }
+          onKeyDown={ this.handleKeyDown.bind(this) }
           onKeyUp={ this.queryInputValue.bind(this) }/>
-        <div className='tip'>Navigation: Shift+Up/Down | Select: Shift+Enter</div>
-        <ListGroup className='result-group'>
+        <ul className='result-group'>
           { this.renderSearchResults() }
-        </ListGroup>
+        </ul>
       </div>
     )
   }

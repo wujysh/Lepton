@@ -11,6 +11,7 @@ import Markdown from 'marked'
 import { shell, remote, clipboard, ipcRenderer } from 'electron'
 import Notifier from '../../utilities/notifier'
 import HumanReadableTime from 'human-readable-time'
+import Autolinker from 'autolinker'
 import {
   addLangPrefix as Prefixed,
   parseCustomTags,
@@ -449,7 +450,10 @@ class Snippet extends Component {
     if (title.length > 0) {
       htmlForDescriptionSection.push(<div className='title-section' key='title'>{ title }</div>)
     }
-    htmlForDescriptionSection.push(<div className='description-section' key='description'>{ description }</div>)
+    htmlForDescriptionSection.push(
+        <div className='description-section' key='description'
+            dangerouslySetInnerHTML={ {__html: Autolinker.link(description, { newWindow: false })} }/>
+    )
     if (customTags.length > 0) {
       htmlForDescriptionSection.push(<div className='custom-tags-section' key='customTags'>{ customTags }</div>)
     }
@@ -480,7 +484,9 @@ class Snippet extends Component {
           <div key={ key }>
             <hr/>
             <div className={ gistFile.language === 'Markdown' ? 'file-header-md' : 'file-header' }>
-              <b>{ gistFile.filename }</b>
+              <a href={ activeSnippet.details.html_url + '#file-' + gistFile.filename.replace(/\./g, '-') }>
+                <b>{ gistFile.filename }</b>
+              </a>
               <a
                 href='#'
                 className='customized-button-file-header'
