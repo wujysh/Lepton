@@ -135,7 +135,6 @@ import 'codemirror/addon/fold/indent-fold'
 import 'codemirror/addon/fold/brace-fold'
 import 'codemirror/addon/fold/foldcode'
 import 'codemirror/addon/fold/markdown-fold'
-import 'codemirror/addon/selection/active-line'
 import 'codemirror/addon/display/placeholder'
 
 import './index.scss'
@@ -172,7 +171,6 @@ class GistEditor extends Component {
       lineNumbers: true,
       matchBrackets: true,
       matchTags: true,
-      styleActiveLine: true,
       lineWrapping: true,
       viewportMargin: Infinity,
       placeholder: placeholder,
