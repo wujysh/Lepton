@@ -83,7 +83,7 @@ class UserPanel extends Component {
     // update the language tags
     const langs = new Set()
     let filenameRecords = ''
-    
+
     gistTags[Prefixed('All')].unshift(gistId)
     Object.keys(files).forEach(filename => {
       filenameRecords = ',' + filename
@@ -136,7 +136,8 @@ class UserPanel extends Component {
     searchIndex.addToFuseIndex({
       id: gistId,
       description: gistDetails.description,
-      language: langSearchRecords
+      language: langSearchRecords,
+      filename: filenameRecords
     })
 
     Notifier('Gist created', HumanReadableTime(new Date()))
@@ -159,8 +160,9 @@ class UserPanel extends Component {
   renderGistEditorModal () {
     return (
       <Modal
-        bsSize="large"
-        dialogClassName="new-modal"
+        bsSize='large'
+        dialogClassName='new-modal'
+        backdrop={ false }
         show={ this.props.gistNewModalStatus === 'ON' }
         onHide={ this.closeGistEditorModal.bind(this)}>
         <Modal.Header closeButton>
@@ -255,15 +257,15 @@ class UserPanel extends Component {
 
   renderLogoutConfirmationModal () {
     return (
-        <div className="static-modal">
-          <Modal show={ this.props.logoutModalStatus === 'ON' } bsSize="small">
+        <div className='static-modal'>
+          <Modal show={ this.props.logoutModalStatus === 'ON' } bsSize='small'>
             <Modal.Header>
               <Modal.Title>Confirm logout?</Modal.Title>
             </Modal.Header>
             <Modal.Footer>
               <Button onClick={ this.handleLogoutModalCancelClicked.bind(this) }>cancel</Button>
               <Button
-                bsStyle="danger"
+                bsStyle='danger'
                 onClick={ this.handleLogoutModalConfirmClicked.bind(this) }>logout</Button>
             </Modal.Footer>
           </Modal>
