@@ -124,6 +124,7 @@ import 'codemirror/mode/sass/sass'
 import 'codemirror/addon/edit/matchbrackets'
 import 'codemirror/addon/edit/matchtags'
 import 'codemirror/addon/dialog/dialog'
+import 'codemirror/addon/mode/loadmode'
 import 'codemirror/addon/search/search'
 import 'codemirror/addon/search/match-highlighter'
 import 'codemirror/addon/search/searchcursor'
@@ -140,34 +141,30 @@ import './index.scss'
 
 class GistEditor extends Component {
   componentDidMount () {
-    this.editor = this.refs.editor.getCodeMirror()
-    this.CodeMirror = this.refs.editor.getCodeMirrorInstance();
+    const { filename } = this.props
+
+    this.editor = this.refs.editor
+    this.CodeMirror = this.editor.getCodeMirrorInstance();
     this.CodeMirror.modeURL = '../../../node_modules/codemirror/mode/%N/%N.js'
-    this.setMode()
+    this.setMode(filename)
   }
 
-  componentDidUpdate (prevProps) {
-    const { value, filename } = this.props
+  componentDidUpdate (prevProps, prevState) {
+    const { filename } = this.props
 
-    if (!this.editor.getValue()) {
-      this.editor.setValue(value)
-    }
     if (prevProps.filename !== filename) {
       this.setMode(filename)
     }
   }
 
   setMode (filename) {
-    if (filename) {
-      const modeInfo = this.CodeMirror.findModeByFileName(filename);
-      this.editor.setOption('mode', modeInfo ? modeInfo.mode : null)
-    } else {
-      this.editor.setOption('mode', null)
-    }
+    const modeInfo = filename ? this.CodeMirror.findModeByFileName(filename) : this.CodeMirror.findModeByName('Plain Text')
+    modeInfo && this.editor.getCodeMirror().setOption('mode', modeInfo.mime)
+    modeInfo && this.CodeMirror.autoLoadMode(this.editor.getCodeMirror(), modeInfo.mode)
   }
 
   render () {
-    const { placeholder } = this.props
+    const { value, placeholder } = this.props
 
     const options = {
       theme: 'github',
@@ -184,6 +181,7 @@ class GistEditor extends Component {
     return (
       <CodeMirror
         ref="editor"
+        value={ value }
         options={ options }
         onChange={ value => this.props.onChange(value) }
       />
