@@ -12,6 +12,7 @@ import { remote, clipboard, ipcRenderer } from 'electron'
 import Notifier from '../../utilities/notifier'
 import HumanReadableTime from 'human-readable-time'
 import Autolinker from 'autolinker'
+import Moment from 'moment'
 import {
   addLangPrefix as Prefixed,
   parseCustomTags,
@@ -309,7 +310,8 @@ class Snippet extends Component {
     this.props.updateGistRawModal({
       status: 'OFF',
       file: null,
-      content: null
+      content: null,
+      link: null
     })
   }
 
@@ -322,7 +324,8 @@ class Snippet extends Component {
     this.props.updateGistRawModal({
       status: 'ON',
       file: gist.filename,
-      content: gist.content
+      content: gist.content,
+      link: gist.raw_url
     })
   }
 
@@ -334,7 +337,10 @@ class Snippet extends Component {
         show={ gistRawModal.status === 'ON' }
         onHide={ this.closeRawModal.bind(this) }>
         <Modal.Header closeButton>
-          <Modal.Title>{ gistRawModal.file }</Modal.Title>
+          <Modal.Title>
+            { gistRawModal.file }
+            <a className='copy-raw-link' href='#' onClick={ this.handleCopyRawLinkClicked.bind(this, gistRawModal.link) }>#link</a>
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <textarea
@@ -413,8 +419,12 @@ class Snippet extends Component {
     Notifier('Copied', 'The share link has been copied to the clipboard.')
   }
 
+  handleCopyRawLinkClicked (url) {
+    clipboard.writeText(url)
+    Notifier('Copied', 'The raw file link has been copied to the clipboard.')
+  }
+
   renderPanelHeader (activeSnippet) {
-    const { userSession } = this.props
     return (
       <div className='header-table'>
         <div className='line'>
@@ -432,8 +442,8 @@ class Snippet extends Component {
             #share
           </a>
           <a className='customized-button'
-            href={ 'https://gist.github.com/' + userSession.profile.login + '/starred' }>
-            #starred
+            href={ activeSnippet.brief.html_url + '/revisions' }>
+            #revisions
           </a>
           {
             this.props.immersiveMode === 'OFF'
@@ -449,8 +459,8 @@ class Snippet extends Component {
     )
   }
 
-  renderSnippetDescription (rawDescription) {
-    const { title, description, customTags } = descriptionParser(rawDescription)
+  renderSnippetDescription (gist) {
+    const { title, description, customTags } = descriptionParser(gist.brief.description)
 
     const htmlForDescriptionSection = []
     if (title.length > 0) {
@@ -460,9 +470,15 @@ class Snippet extends Component {
         <div className='description-section' key='description'
             dangerouslySetInnerHTML={ {__html: Autolinker.link(description, { newWindow: false })} }/>
     )
-    if (customTags.length > 0) {
-      htmlForDescriptionSection.push(<div className='custom-tags-section' key='customTags'>{ customTags }</div>)
-    }
+    htmlForDescriptionSection.push(
+        <div className='custom-tags-section' key='customTags'>
+          { customTags.length > 0
+              ? <span className='custom-tags'>{ customTags }</span>
+              : null }
+          <span className='update-date'>
+              { 'Last updated ' + Moment(gist.brief.updated_at).fromNow() }
+          </span>
+        </div>)
 
     return (
       <div>
@@ -519,7 +535,7 @@ class Snippet extends Component {
         <Panel className='snippet-code'
           bsStyle={ activeSnippet.brief.public ? 'default' : 'danger' }
           header={ this.renderPanelHeader(activeSnippet) }>
-          <div className='snippet-description'>{ this.renderSnippetDescription(activeSnippet.brief.description) }</div>
+          <div className='snippet-description'>{ this.renderSnippetDescription(activeSnippet) }</div>
           { activeSnippet.details
               ? null
               : <ProgressBar className='snippet-progressbar' active now={ 100 }/> }

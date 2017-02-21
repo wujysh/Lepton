@@ -91,11 +91,23 @@
   }
 
   .custom-tags-section {
+    width: 100%;
+    height: 5px;
+    margin-top: 10px;
+  }
+
+  .custom-tags {
     @extend .font-style-base;
     color: grey;
     font-size: 10px;
     font-style: italic;
-    margin-top: 15px;
+    float: left;
+  }
+
+  .update-date {
+    @extend .custom-tags;
+    float: right;
+    margin-right: 5px;
   }
 
   .snippet-progressbar {
@@ -133,6 +145,13 @@
 .raw-modal {
   .modal-dialog {
     width: 90vw !important;
+  }
+
+  .copy-raw-link {
+    @extend .font-style-base;
+    margin-top: 2px;
+    margin-right: 30px;
+    float: right;
   }
 
   .modal-content {
