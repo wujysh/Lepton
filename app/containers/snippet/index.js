@@ -3,7 +3,7 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
-import { Panel, Modal, Button, ProgressBar } from 'react-bootstrap'
+import { Panel, Modal, Button, ProgressBar, Collapse } from 'react-bootstrap'
 import GistEditorForm from '../gistEditorForm'
 import { UPDATE_GIST } from '../gistEditorForm'
 import HighlightJS from 'highlight.js'
@@ -34,6 +34,8 @@ import {
 
 import './index.scss'
 import '../../utilities/vendor/highlightJS/styles/github-gist.css'
+import collapsedIcon from './ic_collapsed.svg'
+import expandedIcon from './ic_expanded.svg'
 
 const logger = remote.getGlobal('logger')
 
@@ -45,6 +47,26 @@ Markdown.setOptions({
 })
 
 class Snippet extends Component {
+
+  constructor (props) {
+    super(props)
+
+    const { gists, activeGist } = this.props
+    if (gists && gists[activeGist] && gists[activeGist].brief) {
+      const fileList = gists[activeGist].brief.files
+      const expandStatus = {}
+      for (const fileKey in fileList) {
+        expandStatus[fileKey] = true
+      }
+      this.state = {
+        expandStatus: expandStatus
+      }
+    } else {
+      this.state = {
+        expandStatus: {}
+      }
+    }
+  }
 
   componentWillMount () {
     ipcRenderer.on('edit-gist-renderer', () => {
@@ -476,7 +498,7 @@ class Snippet extends Component {
               ? <span className='custom-tags'>{ customTags }</span>
               : null }
           <span className='update-date'>
-              { 'Last updated ' + Moment(gist.brief.updated_at).fromNow() }
+              { 'Last active ' + Moment(gist.brief.updated_at).fromNow() }
           </span>
         </div>)
 
@@ -485,6 +507,20 @@ class Snippet extends Component {
         { htmlForDescriptionSection }
       </div>
     )
+  }
+
+  handleCollapseClick (fileKey) {
+    const newExpandStatus = this.state.expandStatus
+
+    if (newExpandStatus[fileKey] === false) {
+      newExpandStatus[fileKey] = true
+    } else {
+      newExpandStatus[fileKey] = false
+    }
+
+    this.setState({
+      expandStatus: newExpandStatus
+    })
   }
 
   render () {
@@ -502,10 +538,18 @@ class Snippet extends Component {
           filename: gistFile.filename,
           content: gistFile.content
         }))
+        let currentExpanded = true
+        if (this.state.expandStatus[key] === false) {
+          currentExpanded = false
+        }
         fileHtmlArray.push(
           <div key={ key }>
             <hr/>
             <div className={ gistFile.language === 'Markdown' ? 'file-header-md' : 'file-header' }>
+              <img
+                src={ currentExpanded ? expandedIcon : collapsedIcon }
+                onClick={ this.handleCollapseClick.bind(this, key) }
+                className='expand-icon'/>
               <a href={ activeSnippet.details.html_url + '#file-' + gistFile.filename.replace(/\./g, '-') }>
                 <b>{ gistFile.filename }</b>
               </a>
@@ -522,9 +566,11 @@ class Snippet extends Component {
                 #copy
               </a>
             </div>
-            <div
-              className='code-area'
-              dangerouslySetInnerHTML={ this.createMarkup(gistFile.content, gistFile.language) }/>
+            <Collapse in={ currentExpanded }>
+              <div
+                className='code-area'
+                dangerouslySetInnerHTML={ this.createMarkup(gistFile.content, gistFile.language) }/>
+            </Collapse>
           </div>
         )
       }
