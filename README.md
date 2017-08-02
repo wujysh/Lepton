@@ -112,7 +112,7 @@ Currently, Lepton only supports the search for the gist's description field. Thi
 ```
 
 #### Can I use Lepton behind a proxy server?
-Yes. Copy and paste the following snippet to `~/.leptonrc`. Create the file if it does not exist, and don't forgot to change the address to your own one.
+Yes. Copy and paste the following snippet to `~/.leptonrc`. Create the file if it does not exist, and don't forget to change the address to your own one.
 ```
 {
   "proxy": {
